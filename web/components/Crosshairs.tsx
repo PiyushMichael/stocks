@@ -1,7 +1,15 @@
 import React from "react";
-import classNames from "classnames";
+import { ChartDimension } from "./Chart";
 
-const CrossHairs = ({ x, y, chart_dims }) => {
+const CrossHairs = ({
+  x,
+  y,
+  chart_dims,
+}: {
+  x: number;
+  y: number;
+  chart_dims: ChartDimension;
+}) => {
   if (x + y === 0) {
     return <></>;
   }
@@ -13,20 +21,16 @@ const CrossHairs = ({ x, y, chart_dims }) => {
         y1={y}
         x2={chart_dims.pixel_width}
         y2={y}
-        className={classNames({
-          cross_hair: true,
-          horz: true,
-        })}
+        stroke="red"
+        strokeWidth={1}
       />
       <line
         x1={x}
         y1={0}
         x2={x}
         y2={chart_dims.pixel_height}
-        className={classNames({
-          cross_hair: true,
-          vert: true,
-        })}
+        stroke="red"
+        strokeWidth={1}
       />
     </>
   );

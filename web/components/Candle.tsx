@@ -1,14 +1,31 @@
-import React from "react";
-import classNames from "classnames";
-import * as d3 from "d3";
+import React, { useMemo } from "react";
+import { ChartDataType } from "./Graph";
 
-const Candle = ({ data, x, candle_width, pixelFor }) => {
-  const up = data.close > data.open;
-  const bar_top = pixelFor(up ? data.close : data.open);
-  const bar_bottom = pixelFor(up ? data.open : data.close);
-  const bar_height = bar_bottom - bar_top;
-  const wick_top = pixelFor(data.high);
-  const wick_bottom = pixelFor(data.low);
+const Candle = ({
+  data,
+  x,
+  candle_width,
+  pixelFor,
+}: {
+  data: ChartDataType;
+  x: number;
+  candle_width: number;
+  pixelFor: (x: number) => number;
+}) => {
+  const up = useMemo(() => data.close > data.open, [data]);
+  const bar_top = useMemo(
+    () => pixelFor(up ? data.close : data.open),
+    [up, data, pixelFor]
+  );
+  const bar_bottom = useMemo(
+    () => pixelFor(up ? data.open : data.close),
+    [up, data, pixelFor]
+  );
+  const bar_height = useMemo(() => bar_bottom - bar_top, [bar_bottom, bar_top]);
+  const wick_top = useMemo(() => pixelFor(data.high), [data, pixelFor]);
+  const wick_bottom = useMemo(() => pixelFor(data.low), [data, pixelFor]);
+
+  const color = useMemo(() => (up ? "red" : "green"), [up]);
 
   return (
     <>
@@ -17,35 +34,23 @@ const Candle = ({ data, x, candle_width, pixelFor }) => {
         y={bar_top}
         width={candle_width}
         height={bar_height}
-        // className={classNames({
-        //   candle: true,
-        //   up: up,
-        //   down: !up,
-        // })}
+        fill={color}
       />
       <line
-        // className={classNames({
-        //   wick: true,
-        //   top: true,
-        //   up: up,
-        //   down: !up,
-        // })}
         x1={x}
         y1={bar_top}
         x2={x}
         y2={wick_top}
+        stroke={color}
+        strokeWidth={1}
       />
       <line
-        // className={classNames({
-        //   wick: true,
-        //   bottom: true,
-        //   up: up,
-        //   down: !up,
-        // })}
         x1={x}
         y1={bar_bottom}
         x2={x}
         y2={wick_bottom}
+        stroke={color}
+        strokeWidth={1}
       />
     </>
   );
