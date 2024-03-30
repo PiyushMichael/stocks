@@ -20,20 +20,9 @@ type HistoryType = {
   };
 };
 
-export const useGetHistory = ({
-  from_date,
-  to_date,
-  stock_code,
-}: {
-  from_date: string;
-  to_date: string;
-  stock_code: string;
-}) => {
+export const useGetHistory = ({ stock_code }: { stock_code: string }) => {
   return useQuery({
     queryKey: "history",
-    queryFn: () =>
-      GET<HistoryType>(
-        `/api/history?from_date=${from_date}&to_date=${to_date}&stock_code=${stock_code}`
-      ),
+    queryFn: () => GET<HistoryType>(`/api/history?stock_code=${stock_code}`),
   });
 };

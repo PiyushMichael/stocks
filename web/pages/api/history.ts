@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import NodeCache from "node-cache";
+import SAMPLE from "@/constants/sample.json";
 
 const api_key = "PN8U6IS077BTGJ3Y";
+const cache = new NodeCache();
 
 type ResponseData = {
   "Meta Data": {
@@ -50,7 +53,7 @@ const transformResponse = (data: ResponseData): TransformedType => {
       output_size: data["Meta Data"]["4. Output Size"],
       time_zone: data["Meta Data"]["5. Time Zone"],
     },
-    time_series_daily: Object.keys(data).reduce<
+    time_series_daily: Object.keys(data["Time Series (Daily)"]).reduce<
       TransformedType["time_series_daily"]
     >((acc, key) => {
       acc[key] = {
@@ -70,16 +73,28 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<TransformedType>
 ) {
-  const { to_date, from_date, stock_code } = req.query;
-  if (!to_date || !from_date || !stock_code) {
+  const { stock_code } = req.query;
+  if (!stock_code) {
     return res.status(400);
   }
 
-  const URL = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stock_code}.BSE&apikey=${api_key}&outputsize=compact`;
-  const data: ResponseData = await fetch(URL).then((res) => res.json());
+  const cachedVal = cache.get<TransformedType>(`${stock_code}`);
+  if (cachedVal) {
+    console.log(
+      "==================== RETURNING FROM CACHE ===================="
+    );
+    return res.status(200).json(cachedVal);
+  }
+
+  const URL = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stock_code}.BSE&apikey=${api_key}&outputsize=full`;
+  // const data: ResponseData = await fetch(URL).then((res) => res.json());
+  const data: ResponseData = SAMPLE;
   if (data.Information) {
     return res.status(400);
   }
 
-  return res.status(200).json(transformResponse(data));
+  const repsonse = transformResponse(data);
+  cache.set(`${stock_code}`, repsonse, 86400000);
+
+  return res.status(200).json(repsonse);
 }
