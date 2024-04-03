@@ -1,12 +1,17 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as d3 from "d3";
 
 import Candle from "./Candle";
 import CrossHairs from "./CrossHairs";
 import { ChartDataType } from "./Graph";
+import { useScreenSize } from "@/hooks/useScreenSize";
+import { HistoryType } from "@/api/useGetHistory";
+import LegendX from "./LegendX";
+import LegendY from "./LegendY";
 
 const CANDLE_WIDTH = 6;
 const CANGDLE_OFFSET = 9.6;
+const LEGEND_SPACING = CANGDLE_OFFSET * 20;
 
 export type ChartDimension = {
   pixel_width: number;
@@ -19,10 +24,17 @@ export type ChartDimension = {
 // derived from https://codesandbox.io/s/react-d3-candlestick-chart-h0fs0
 // By https://codesandbox.io/u/GregX999
 
-const Chart = ({ data }: { data: ChartDataType[] }) => {
-  const view_width = 960;
-  const chart_width = data ? data.length * 6 : view_width;
-  const chart_height = 600;
+const Chart = ({
+  data,
+  meta,
+}: {
+  data: ChartDataType[];
+  meta?: HistoryType["meta_data"];
+}) => {
+  const { width, height } = useScreenSize();
+  const view_width = width;
+  const chart_width = data ? data.length * 9.7 : view_width;
+  const chart_height = height;
 
   // last_bar_idx should default to the last bar in the data, or else be sure passed-in value doesn't exceed the last bar
   // last_bar_idx = last_bar_idx > 0 ? Math.min(last_bar_idx, data.length - 1) : data.length - 1;
@@ -35,6 +47,11 @@ const Chart = ({ data }: { data: ChartDataType[] }) => {
   const [isScrolling, setIsScrolling] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  useEffect(() => {
+    const slider = document.querySelector("#chart-container");
+    slider.scrollLeft = chart_width;
+  }, [chart_width, data]);
 
   // find the high and low bounds of all the bars being sidplayed
   const dollar_high = useMemo(
@@ -54,17 +71,17 @@ const Chart = ({ data }: { data: ChartDataType[] }) => {
       dollar_low,
       dollar_delta: dollar_high - dollar_low,
     }),
-    [chart_width, dollar_high, dollar_low]
+    [chart_height, chart_width, dollar_high, dollar_low]
   );
 
-  const dollarAt = useCallback(
+  const rupeesAt = useCallback(
     (pixel: number): string => {
       const dollar =
         (Math.abs(pixel - chart_dims.pixel_height) / chart_dims.pixel_height) *
           chart_dims.dollar_delta +
         chart_dims.dollar_low;
 
-      return pixel > 0 ? dollar.toFixed(2) : "-";
+      return pixel > 0 ? `₹${dollar.toFixed(2)}` : "-";
     },
     [chart_dims]
   );
@@ -102,17 +119,14 @@ const Chart = ({ data }: { data: ChartDataType[] }) => {
     []
   );
 
-  const onMouseClickInside: React.MouseEventHandler<SVGSVGElement> =
-    useCallback((e) => {
-      console.log(
-        `Click at ${e.nativeEvent.offsetX}, ${e.nativeEvent.offsetY}`
-      );
-    }, []);
-
   return (
     <div
       id="chart-container"
-      style={{ backgroundColor: "#ddd", overflowX: "auto", width: view_width }}
+      style={{
+        backgroundColor: "#ddd",
+        overflowX: "hidden",
+        width: view_width,
+      }}
       onMouseDown={(e) => {
         const slider = document.querySelector("#chart-container");
         setIsScrolling(true);
@@ -135,34 +149,35 @@ const Chart = ({ data }: { data: ChartDataType[] }) => {
         width={chart_width}
         height={chart_height}
         onMouseMove={onMouseMoveInside}
-        onClick={onMouseClickInside}
         onMouseLeave={onMouseLeave}
       >
-        {data.map((bar, i) => {
-          const candle_x = CANGDLE_OFFSET * (i + 1);
-          return (
-            <Candle
-              key={i}
-              data={bar}
-              x={candle_x}
-              candle_width={CANDLE_WIDTH}
-              pixelFor={pixelFor}
-            />
-          );
-        })}
-
+        {data.map((bar, i) => (
+          <Candle
+            key={i}
+            data={bar}
+            x={CANGDLE_OFFSET * (i + 1)}
+            candle_width={CANDLE_WIDTH}
+            pixelFor={pixelFor}
+          />
+        ))}
         <CrossHairs
           x={mouseCoords.x}
           y={mouseCoords.y}
           chart_dims={chart_dims}
         />
+        <LegendX
+          spacingX={LEGEND_SPACING}
+          count={20}
+          height={chart_height}
+          lastUpdated={meta?.last_refreshed}
+        />
+        <LegendY
+          spacingY={chart_height / 5}
+          count={5}
+          width={chart_width}
+          rupeesAt={rupeesAt}
+        />
       </svg>
-      <div style={{ position: "absolute", top: 10, left: 16 }}>
-        <div>
-          Mouse: {mouseCoords.x}, {mouseCoords.y}
-        </div>
-        <div>Dollars: ${dollarAt(mouseCoords.y)}</div>
-      </div>
     </div>
   );
 };

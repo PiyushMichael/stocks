@@ -1,7 +1,7 @@
 import { useQuery } from "react-query";
 import { GET } from "./axiosHelpers";
 
-type HistoryType = {
+export type HistoryType = {
   meta_data: {
     info: string;
     symbol: string;
