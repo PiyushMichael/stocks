@@ -33,7 +33,7 @@ const LegendX = ({
               y1={0}
               y2={height}
               stroke="grey"
-              strokeWidth={0.2}
+              strokeWidth={0.5}
             />
             <text x={spacingX * (i + 1) - 60} y={height - 10}>
               {getDateString(i)}

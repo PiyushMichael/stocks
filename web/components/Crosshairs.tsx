@@ -22,7 +22,7 @@ const CrossHairs = ({
         x2={chart_dims.pixel_width}
         y2={y}
         stroke="red"
-        strokeWidth={1}
+        strokeWidth={0.5}
       />
       <line
         x1={x}
@@ -30,7 +30,7 @@ const CrossHairs = ({
         x2={x}
         y2={chart_dims.pixel_height}
         stroke="red"
-        strokeWidth={1}
+        strokeWidth={0.5}
       />
     </>
   );
