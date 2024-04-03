@@ -20,7 +20,7 @@ type StockType = {
 
 export const useGetStocks = ({ search }: { search: string }) => {
   return useQuery({
-    queryKey: "stocks",
+    queryKey: ["stocks", search],
     queryFn: () => GET<StockType[]>(`/api/stocks?search=${search}`),
   });
 };

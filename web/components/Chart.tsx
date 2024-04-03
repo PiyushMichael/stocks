@@ -12,6 +12,7 @@ import LegendY from "./LegendY";
 const CANDLE_WIDTH = 6;
 const CANGDLE_OFFSET = 9.6;
 const LEGEND_SPACING = CANGDLE_OFFSET * 20;
+const APP_BAR_HEIGHT = 60;
 
 export type ChartDimension = {
   pixel_width: number;
@@ -27,14 +28,16 @@ export type ChartDimension = {
 const Chart = ({
   data,
   meta,
+  steps,
 }: {
   data: ChartDataType[];
   meta?: HistoryType["meta_data"];
+  steps: number;
 }) => {
   const { width, height } = useScreenSize();
   const view_width = width;
   const chart_width = data ? data.length * 9.7 : view_width;
-  const chart_height = height;
+  const chart_height = height - APP_BAR_HEIGHT;
 
   // last_bar_idx should default to the last bar in the data, or else be sure passed-in value doesn't exceed the last bar
   // last_bar_idx = last_bar_idx > 0 ? Math.min(last_bar_idx, data.length - 1) : data.length - 1;
@@ -170,6 +173,7 @@ const Chart = ({
           count={20}
           height={chart_height}
           lastUpdated={meta?.last_refreshed}
+          steps={steps}
         />
         <LegendY
           spacingY={chart_height / 5}

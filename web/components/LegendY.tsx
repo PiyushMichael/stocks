@@ -34,7 +34,10 @@ const LegendY = ({
               stroke="grey"
               strokeWidth={0.5}
             />
-            <text x={4} y={spacingY * i + 16}>
+            <text x={10} y={spacingY * i + 16}>
+              {rupeesAt(spacingY * i + 16)}
+            </text>
+            <text x={width - 80} y={spacingY * i + 16}>
               {rupeesAt(spacingY * i + 16)}
             </text>
           </>

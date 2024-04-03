@@ -1,23 +1,31 @@
 import React, { useCallback } from "react";
 import moment from "moment";
+import { CANDLES_PER_PAGE } from "@/constants/app_contants";
 
 const LegendX = ({
   spacingX,
   count,
   height,
   lastUpdated,
+  steps,
 }: {
   spacingX: number;
   count: number;
   height: number;
   lastUpdated?: string;
+  steps: number;
 }) => {
   const getDateString = useCallback(
     (index: number) => {
       const lastUpdateDate = moment(lastUpdated);
-      return lastUpdateDate.subtract((count - index - 1) * 20, "days").format("ll");
+      return lastUpdateDate
+        .subtract(
+          (count - index - 1) * 20 + (steps - 1) * CANDLES_PER_PAGE,
+          "days"
+        )
+        .format("ll");
     },
-    [count, lastUpdated]
+    [count, lastUpdated, steps]
   );
 
   return (
