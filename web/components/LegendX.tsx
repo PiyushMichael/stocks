@@ -20,7 +20,8 @@ const LegendX = ({
       const lastUpdateDate = moment(lastUpdated);
       return lastUpdateDate
         .subtract(
-          (count - index - 1) * 20 + (steps - 1) * CANDLES_PER_PAGE,
+          (count - index - 1) * (CANDLES_PER_PAGE / count) +
+            (steps - 1) * CANDLES_PER_PAGE,
           "days"
         )
         .format("ll");
@@ -35,7 +36,7 @@ const LegendX = ({
         .map((_c, i) => (
           <>
             <line
-              key={`y-legend-${i}`}
+              key={`x-legend-${i}`}
               x1={spacingX * (i + 1)}
               x2={spacingX * (i + 1)}
               y1={0}

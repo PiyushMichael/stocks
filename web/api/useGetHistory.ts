@@ -22,7 +22,7 @@ export type HistoryType = {
 
 export const useGetHistory = ({ stock_code }: { stock_code: string }) => {
   return useQuery({
-    queryKey: "history",
+    queryKey: ["history", stock_code],
     queryFn: () => GET<HistoryType>(`/api/history?stock_code=${stock_code}`),
   });
 };

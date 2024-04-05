@@ -11,14 +11,6 @@ const LegendY = ({
   width: number;
   rupeesAt: (v: number) => string;
 }) => {
-  // const getDateString = useCallback(
-  //   (index: number) => {
-  //     const lastUpdateDate = moment(lastUpdated);
-  //     return lastUpdateDate.subtract((count - index - 1) * 20, "days").format("ll");
-  //   },
-  //   [count, lastUpdated]
-  // );
-
   return (
     <>
       {Array(count)

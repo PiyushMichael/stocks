@@ -8,11 +8,14 @@ import { useScreenSize } from "@/hooks/useScreenSize";
 import { HistoryType } from "@/api/useGetHistory";
 import LegendX from "./LegendX";
 import LegendY from "./LegendY";
-
-const CANDLE_WIDTH = 6;
-const CANGDLE_OFFSET = 9.6;
-const LEGEND_SPACING = CANGDLE_OFFSET * 20;
-const APP_BAR_HEIGHT = 60;
+import {
+  APP_BAR_HEIGHT,
+  CANDLE_WIDTH,
+  CANGDLE_OFFSET,
+  LEGEND_X_SPACING,
+  LEGEND_X_STEPS,
+  LEGEND_Y_STEPS,
+} from "@/constants/app_contants";
 
 export type ChartDimension = {
   pixel_width: number;
@@ -53,7 +56,9 @@ const Chart = ({
 
   useEffect(() => {
     const slider = document.querySelector("#chart-container");
-    slider.scrollLeft = chart_width;
+    if (slider) {
+      slider.scrollLeft = chart_width;
+    }
   }, [chart_width, data]);
 
   // find the high and low bounds of all the bars being sidplayed
@@ -132,17 +137,21 @@ const Chart = ({
       }}
       onMouseDown={(e) => {
         const slider = document.querySelector("#chart-container");
-        setIsScrolling(true);
-        setStartX(e.pageX - slider.offsetLeft);
-        setScrollLeft(slider.scrollLeft);
+        if (slider) {
+          setIsScrolling(true);
+          // @ts-expect-error patch
+          setStartX(e.pageX - slider.offsetLeft);
+          setScrollLeft(slider.scrollLeft);
+        }
       }}
       onMouseUp={() => setIsScrolling(false)}
       onMouseMove={(e) => {
         e.preventDefault();
         const slider = document.querySelector("#chart-container");
-        if (!isScrolling) {
+        if (!isScrolling || !slider) {
           return;
         }
+        // @ts-expect-error patch
         const x = e.pageX - slider.offsetLeft;
         const scroll = x - startX;
         slider.scrollLeft = scrollLeft - scroll;
@@ -169,15 +178,15 @@ const Chart = ({
           chart_dims={chart_dims}
         />
         <LegendX
-          spacingX={LEGEND_SPACING}
-          count={20}
+          spacingX={LEGEND_X_SPACING}
+          count={LEGEND_X_STEPS}
           height={chart_height}
           lastUpdated={meta?.last_refreshed}
           steps={steps}
         />
         <LegendY
           spacingY={chart_height / 5}
-          count={5}
+          count={LEGEND_Y_STEPS}
           width={chart_width}
           rupeesAt={rupeesAt}
         />

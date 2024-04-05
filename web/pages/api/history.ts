@@ -1,9 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import NodeCache from "node-cache";
-import SAMPLE from "@/constants/sample.json";
+import fs from "fs";
 
 const api_key = "PN8U6IS077BTGJ3Y";
-const cache = new NodeCache();
 
 type ResponseData = {
   "Meta Data": {
@@ -69,6 +67,46 @@ const transformResponse = (data: ResponseData): TransformedType => {
   return obj;
 };
 
+const readFile = (stock_code: string) =>
+  new Promise<ResponseData>((res, rej) => {
+    fs.readFile(`./public/json/${stock_code}.json`, (err, files) => {
+      if (err) {
+        rej(err);
+        return;
+      }
+      try {
+        res(JSON.parse(files.toString()));
+      } catch (e) {
+        rej(e);
+      }
+    });
+  });
+
+const writeFile = (stock_code: string, json: any) =>
+  new Promise<void>((res, rej) => {
+    fs.writeFile(`./public/json/${stock_code}.json`, JSON.stringify(json), () =>
+      res()
+    );
+  });
+
+const fetchAndUpdate = (stock_code: string) =>
+  new Promise<ResponseData>((res, rej) => {
+    const URL = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stock_code}.BSE&apikey=${api_key}&outputsize=full`;
+    fetch(URL)
+      .then((res) => res.json())
+      .then((data: ResponseData) => {
+        if (data.Information) {
+          readFile(stock_code).then(res).catch(rej);
+        } else {
+          writeFile(stock_code, data);
+          res(data);
+        }
+      })
+      .catch(() => {
+        readFile(stock_code).then(res).catch(rej);
+      });
+  });
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<TransformedType>
@@ -78,23 +116,8 @@ export default async function handler(
     return res.status(400);
   }
 
-  const cachedVal = cache.get<TransformedType>(`${stock_code}`);
-  if (cachedVal) {
-    console.log(
-      "==================== RETURNING FROM CACHE ===================="
-    );
-    return res.status(200).json(cachedVal);
-  }
-
-  const URL = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stock_code}.BSE&apikey=${api_key}&outputsize=full`;
-  // const data: ResponseData = await fetch(URL).then((res) => res.json());
-  const data: ResponseData = SAMPLE;
-  if (data.Information) {
-    return res.status(400);
-  }
+  const data = await fetchAndUpdate(stock_code as string);
 
   const repsonse = transformResponse(data);
-  cache.set(`${stock_code}`, repsonse, 86400000);
-
   return res.status(200).json(repsonse);
 }

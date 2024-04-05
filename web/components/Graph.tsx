@@ -20,10 +20,11 @@ export type ChartDataType = {
 };
 
 export default function Graph() {
-  const [search, setSearch] = useState("");
-  const [stepBacks, setStepbacks] = useState(1);
-  const { data: history } = useGetHistory({ stock_code: "RELIANCE" });
-  const { data: stocks } = useGetStocks({ search });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stepBacks, setStepBacks] = useState(1);
+  const [stockCode, setStockCode] = useState("TATAPOWER");
+  const { data: history } = useGetHistory({ stock_code: stockCode });
+  const { data: stocks } = useGetStocks({ search: searchTerm });
 
   const stockResults = useMemo(() => {
     if (stocks) {
@@ -37,24 +38,21 @@ export default function Graph() {
     return [];
   }, [stocks]);
 
-  const chartData: ChartDataType[] = useMemo(
-    () =>
-      history?.time_series_daily
-        ? Object.keys(history?.time_series_daily)
-            .map((key, i) => ({
-              open: parseFloat(history.time_series_daily[key].open),
-              close: parseFloat(history.time_series_daily[key].close),
-              low: parseFloat(history.time_series_daily[key].low),
-              high: parseFloat(history.time_series_daily[key].high),
-              volume: parseFloat(history.time_series_daily[key].volume),
-            }))
-            .slice(
-              -CANDLES_PER_PAGE * stepBacks,
-              stepBacks === 1 ? undefined : -CANDLES_PER_PAGE * (stepBacks - 1)
-            )
-        : [],
-    [history, stepBacks]
-  );
+  const chartData: ChartDataType[] = useMemo(() => {
+    const end =
+      stepBacks === 1 ? undefined : -CANDLES_PER_PAGE * (stepBacks - 1);
+    return history?.time_series_daily
+      ? Object.keys(history?.time_series_daily)
+          .map((key, i) => ({
+            open: parseFloat(history.time_series_daily[key].open),
+            close: parseFloat(history.time_series_daily[key].close),
+            low: parseFloat(history.time_series_daily[key].low),
+            high: parseFloat(history.time_series_daily[key].high),
+            volume: parseFloat(history.time_series_daily[key].volume),
+          }))
+          .slice(-CANDLES_PER_PAGE * stepBacks, end)
+      : [];
+  }, [history, stepBacks]);
 
   const historyLength = Object.keys(history?.time_series_daily || {}).length;
 
@@ -68,7 +66,7 @@ export default function Graph() {
             aria-label="menu"
             sx={{ mr: 2 }}
             disabled={stepBacks * CANDLES_PER_PAGE > historyLength}
-            onClick={() => setStepbacks(stepBacks + 1)}
+            onClick={() => setStepBacks(stepBacks + 1)}
           >
             <ChevronLeft fontSize="large" />
           </IconButton>
@@ -78,27 +76,35 @@ export default function Graph() {
             aria-label="menu"
             sx={{ mr: 2 }}
             disabled={stepBacks === 1}
-            onClick={() => setStepbacks(stepBacks - 1)}
+            onClick={() => setStepBacks(stepBacks - 1)}
           >
             <ChevronRight fontSize="large" />
           </IconButton>
-          <Typography variant="h6" color="inherit" component="div">
+          <Typography variant="h5" color="inherit" component="div">
             Stocks
           </Typography>
           <Autocomplete
             disablePortal
+            onChange={(_e, val) => {
+              if (val?.value) {
+                setStockCode(val.value);
+              }
+            }}
             id="combo-box-demo"
             options={stockResults}
-            sx={{ width: 300, marginLeft: 2 }}
+            sx={{ width: 300, marginLeft: 2, marginRight: 2 }}
             renderInput={(params) => (
               <TextField
                 {...params}
                 label="Search..."
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 style={{ color: "#fff" }}
               />
             )}
           />
+          <Typography variant="h6" color="inherit" component="div">
+            {history?.meta_data.symbol ?? "--"}
+          </Typography>
         </Toolbar>
       </AppBar>
       <Chart data={chartData} meta={history?.meta_data} steps={stepBacks} />
