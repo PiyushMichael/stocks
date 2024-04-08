@@ -116,6 +116,7 @@ export default async function handler(
     return res.status(400);
   }
 
+  // const data = await readFile(stock_code as string); // for debugging wihtout API calls
   const data = await fetchAndUpdate(stock_code as string);
 
   const repsonse = transformResponse(data);

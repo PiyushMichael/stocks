@@ -1,5 +1,5 @@
 import { useGetHistory } from "@/api/useGetHistory";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Chart from "./Chart";
 import { useGetStocks } from "@/api/useGetStocks";
 import AppBar from "@mui/material/AppBar";
@@ -12,6 +12,7 @@ import { CANDLES_PER_PAGE } from "@/constants/app_contants";
 import { Autocomplete, TextField } from "@mui/material";
 
 export type ChartDataType = {
+  date: string;
   open: number;
   high: number;
   low: number;
@@ -30,7 +31,7 @@ export default function Graph() {
     if (stocks) {
       return stocks
         .map((stock) => ({
-          label: stock.security_name,
+          label: `${stock.security_name} (${stock.security_id})`,
           value: stock.security_id,
         }))
         .slice(0, 100);
@@ -38,12 +39,18 @@ export default function Graph() {
     return [];
   }, [stocks]);
 
+  useEffect(() => {
+    setStepBacks(1);
+  }, [history]);
+
   const chartData: ChartDataType[] = useMemo(() => {
     const end =
       stepBacks === 1 ? undefined : -CANDLES_PER_PAGE * (stepBacks - 1);
     return history?.time_series_daily
       ? Object.keys(history?.time_series_daily)
-          .map((key, i) => ({
+          .sort()
+          .map((key) => ({
+            date: key,
             open: parseFloat(history.time_series_daily[key].open),
             close: parseFloat(history.time_series_daily[key].close),
             low: parseFloat(history.time_series_daily[key].low),
