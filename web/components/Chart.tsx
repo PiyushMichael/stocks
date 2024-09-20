@@ -1,4 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import * as d3 from "d3";
 
 import Candle from "./Candle";
@@ -16,6 +21,9 @@ import {
   LEGEND_X_STEPS,
   LEGEND_Y_STEPS,
 } from "@/constants/app_contants";
+
+import "@pixi/events";
+import { Stage, Container } from "@pixi/react";
 
 export type ChartDimension = {
   pixel_width: number;
@@ -51,8 +59,8 @@ const Chart = ({
   });
 
   const [isScrolling, setIsScrolling] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
+  const [startX, setStartX] = useState<number>();
+  const [offset, setOffset] = useState(0);
 
   useEffect(() => {
     const slider = document.querySelector("#chart-container");
@@ -86,7 +94,7 @@ const Chart = ({
     (pixel: number): string => {
       const dollar =
         (Math.abs(pixel - chart_dims.pixel_height) / chart_dims.pixel_height) *
-          chart_dims.dollar_delta +
+        chart_dims.dollar_delta +
         chart_dims.dollar_low;
 
       return pixel > 0 ? `₹${dollar.toFixed(2)}` : "-";
@@ -98,71 +106,36 @@ const Chart = ({
     (dollar: number): number => {
       return Math.abs(
         ((dollar - chart_dims["dollar_low"]) / chart_dims["dollar_delta"]) *
-          chart_dims["pixel_height"] -
-          chart_dims["pixel_height"]
+        chart_dims["pixel_height"] -
+        chart_dims["pixel_height"]
       );
     },
     [chart_dims]
   );
 
-  const onMouseLeave: React.MouseEventHandler<SVGSVGElement> =
-    useCallback(() => {
-      setMouseCoords({
-        x: 0,
-        y: 0,
-      });
-    }, []);
-
-  const onMouseMoveInside: React.MouseEventHandler<SVGSVGElement> = useCallback(
-    (e) => {
-      setMouseCoords({
-        x:
-          e.nativeEvent.x -
-          Math.round(e.currentTarget.getBoundingClientRect().left),
-        y:
-          e.nativeEvent.y -
-          Math.round(e.currentTarget.getBoundingClientRect().top),
-      });
-    },
-    []
-  );
-
   return (
-    <div
-      id="chart-container"
-      style={{
-        backgroundColor: "#ddd",
-        overflowX: "hidden",
-        width: view_width,
-      }}
+    <Stage
       onMouseDown={(e) => {
-        const slider = document.querySelector("#chart-container");
-        if (slider) {
-          setIsScrolling(true);
-          // @ts-expect-error patch
-          setStartX(e.pageX - slider.offsetLeft);
-          setScrollLeft(slider.scrollLeft);
-        }
+        setStartX(e.pageX - offset);
+        setIsScrolling(true);
       }}
-      onMouseUp={() => setIsScrolling(false)}
-      onMouseMove={(e) => {
-        e.preventDefault();
-        const slider = document.querySelector("#chart-container");
-        if (!isScrolling || !slider) {
-          return;
-        }
-        // @ts-expect-error patch
-        const x = e.pageX - slider.offsetLeft;
-        const scroll = x - startX;
-        slider.scrollLeft = scrollLeft - scroll;
+      onMouseUp={() => {
+        setStartX(undefined);
+        setIsScrolling(false);
       }}
+      onMouseMoveCapture={(e) => {
+        if (isScrolling && startX !== undefined) {
+          console.log("OFFSET", startX - e.pageX);
+          setOffset((v) => e.pageX - startX);
+        }
+        console.log("HOVER", e.pageX, e.pageY);
+        setMouseCoords({ x: e.pageX, y: e.pageY });
+      }}
+      options={{ background: '#ddd' }}
+      width={view_width}
+      height={chart_height}
     >
-      <svg
-        width={chart_width}
-        height={chart_height}
-        onMouseMove={onMouseMoveInside}
-        onMouseLeave={onMouseLeave}
-      >
+      <Container x={offset}>
         {data.map((bar, i) => (
           <Candle
             key={i}
@@ -175,6 +148,7 @@ const Chart = ({
         <CrossHairs
           x={mouseCoords.x}
           y={mouseCoords.y}
+          offset={offset}
           chart_dims={chart_dims}
         />
         <LegendX
@@ -188,10 +162,11 @@ const Chart = ({
           spacingY={chart_height / 5}
           count={LEGEND_Y_STEPS}
           width={chart_width}
+          offset={offset}
           rupeesAt={rupeesAt}
         />
-      </svg>
-    </div>
+      </Container>
+    </Stage>
   );
 };
 

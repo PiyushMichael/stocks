@@ -1,6 +1,8 @@
 import React, { useCallback } from "react";
 import moment from "moment";
-import { CANDLES_PER_PAGE } from "@/constants/app_contants";
+import { APP_BAR_HEIGHT, CANDLES_PER_PAGE } from "@/constants/app_contants";
+import { Graphics, Text } from "@pixi/react";
+import { TextStyle } from "@pixi/text";
 
 const LegendX = ({
   spacingX,
@@ -21,7 +23,7 @@ const LegendX = ({
       return lastUpdateDate
         .subtract(
           (count - index - 1) * (CANDLES_PER_PAGE / count) +
-            (steps - 1) * CANDLES_PER_PAGE,
+          (steps - 1) * CANDLES_PER_PAGE,
           "days"
         )
         .format("ll");
@@ -35,18 +37,22 @@ const LegendX = ({
         .fill(0)
         .map((_c, i) => (
           <>
-            <line
-              key={`x-legend-${i}`}
-              x1={spacingX * (i + 1)}
-              x2={spacingX * (i + 1)}
-              y1={0}
-              y2={height}
-              stroke="grey"
-              strokeWidth={0.5}
+            {/* line */}
+            <Graphics
+              draw={(g) => {
+                g.clear();
+                g.beginFill("grey");
+                g.drawRect(spacingX * (i + 1) - 0.5, 0, 0.5, height);
+                g.endFill();
+              }}
             />
-            <text x={spacingX * (i + 1) - 60} y={height - 10}>
-              {getDateString(i)}
-            </text>
+            {/* text */}
+            <Text
+              text={getDateString(i)}
+              x={spacingX * (i + 1) - 60}
+              y={height + 32 - APP_BAR_HEIGHT}
+              style={new TextStyle({ fontSize: 16 })}
+            />
           </>
         ))}
     </>

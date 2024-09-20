@@ -1,13 +1,17 @@
 import React from "react";
 import { ChartDimension } from "./Chart";
+import { Graphics } from "@pixi/react";
+import { APP_BAR_HEIGHT } from "@/constants/app_contants";
 
 const CrossHairs = ({
   x,
   y,
+  offset,
   chart_dims,
 }: {
   x: number;
   y: number;
+  offset: number;
   chart_dims: ChartDimension;
 }) => {
   if (x + y === 0) {
@@ -16,21 +20,23 @@ const CrossHairs = ({
 
   return (
     <>
-      <line
-        x1={0}
-        y1={y}
-        x2={chart_dims.pixel_width}
-        y2={y}
-        stroke="red"
-        strokeWidth={0.5}
+      {/* X - hair */}
+      <Graphics
+        draw={(g) => {
+          g.clear();
+          g.beginFill("red");
+          g.drawRect(0 - offset, y - 1 - APP_BAR_HEIGHT, chart_dims.pixel_width, 1);
+          g.endFill();
+        }}
       />
-      <line
-        x1={x}
-        y1={0}
-        x2={x}
-        y2={chart_dims.pixel_height}
-        stroke="red"
-        strokeWidth={0.5}
+      {/* Y - Hair */}
+      <Graphics
+        draw={(g) => {
+          g.clear();
+          g.beginFill("red");
+          g.drawRect(x - 1 - offset, 0, 1, chart_dims.pixel_height);
+          g.endFill();
+        }}
       />
     </>
   );

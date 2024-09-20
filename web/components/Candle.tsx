@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { ChartDataType } from "./Graph";
+import { Graphics } from "@pixi/react";
 
 const Candle = ({
   data,
@@ -29,28 +30,32 @@ const Candle = ({
 
   return (
     <>
-      <rect
-        x={x - candle_width / 2}
-        y={bar_top}
-        width={candle_width}
-        height={bar_height}
-        fill={color}
+      {/* Candle */}
+      <Graphics
+        draw={(g) => {
+          g.clear();
+          g.beginFill(color);
+          g.drawRect(x - candle_width / 2, bar_top, candle_width, bar_height);
+          g.endFill();
+        }}
       />
-      <line
-        x1={x}
-        y1={bar_top}
-        x2={x}
-        y2={wick_top}
-        stroke={color}
-        strokeWidth={1}
+      {/* Top Wick */}
+      <Graphics
+        draw={(g) => {
+          g.clear();
+          g.beginFill(color);
+          g.drawRect(x - 1, wick_top, 1, bar_top - wick_top);
+          g.endFill();
+        }}
       />
-      <line
-        x1={x}
-        y1={bar_bottom}
-        x2={x}
-        y2={wick_bottom}
-        stroke={color}
-        strokeWidth={1}
+      {/* Bottom Wick */}
+      <Graphics
+        draw={(g) => {
+          g.clear();
+          g.beginFill(color);
+          g.drawRect(x - 1, bar_bottom, 1, wick_bottom - bar_bottom);
+          g.endFill();
+        }}
       />
     </>
   );
