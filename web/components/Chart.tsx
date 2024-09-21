@@ -125,10 +125,16 @@ const Chart = ({
       }}
       onMouseMoveCapture={(e) => {
         if (isScrolling && startX !== undefined) {
-          console.log("OFFSET", startX - e.pageX);
-          setOffset((v) => e.pageX - startX);
+          if (e.pageX - startX <= 0) {
+            if ((e.pageX - startX + chart_width) >= view_width) {
+              setOffset(e.pageX - startX);
+            } else {
+              setOffset(view_width - chart_width)
+            }
+          } else {
+            setOffset(0)
+          }
         }
-        console.log("HOVER", e.pageX, e.pageY);
         setMouseCoords({ x: e.pageX, y: e.pageY });
       }}
       options={{ background: '#ddd' }}
@@ -162,7 +168,6 @@ const Chart = ({
           spacingY={chart_height / 5}
           count={LEGEND_Y_STEPS}
           width={chart_width}
-          offset={offset}
           rupeesAt={rupeesAt}
         />
       </Container>

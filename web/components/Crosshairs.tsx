@@ -24,8 +24,9 @@ const CrossHairs = ({
       <Graphics
         draw={(g) => {
           g.clear();
-          g.beginFill("red");
-          g.drawRect(0 - offset, y - 1 - APP_BAR_HEIGHT, chart_dims.pixel_width, 1);
+          g.lineStyle(1, "red");
+          g.moveTo(0 - offset, y - APP_BAR_HEIGHT);
+          g.lineTo(chart_dims.pixel_width, y - 1 - APP_BAR_HEIGHT);
           g.endFill();
         }}
       />
@@ -33,8 +34,9 @@ const CrossHairs = ({
       <Graphics
         draw={(g) => {
           g.clear();
-          g.beginFill("red");
-          g.drawRect(x - 1 - offset, 0, 1, chart_dims.pixel_height);
+          g.lineStyle(1, "red");
+          g.moveTo(x - offset, 0);
+          g.lineTo(x - offset, chart_dims.pixel_height);
           g.endFill();
         }}
       />

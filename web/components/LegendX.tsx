@@ -41,8 +41,9 @@ const LegendX = ({
             <Graphics
               draw={(g) => {
                 g.clear();
-                g.beginFill("grey");
-                g.drawRect(spacingX * (i + 1) - 0.5, 0, 0.5, height);
+                g.lineStyle(1, "grey");
+                g.moveTo(spacingX * (i + 1), 0);
+                g.lineTo(spacingX * (i + 1), height);
                 g.endFill();
               }}
             />

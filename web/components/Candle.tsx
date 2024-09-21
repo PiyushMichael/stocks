@@ -43,8 +43,9 @@ const Candle = ({
       <Graphics
         draw={(g) => {
           g.clear();
-          g.beginFill(color);
-          g.drawRect(x - 1, wick_top, 1, bar_top - wick_top);
+          g.lineStyle(1, color);
+          g.moveTo(x, wick_top);
+          g.lineTo(x, bar_top);
           g.endFill();
         }}
       />
@@ -52,8 +53,9 @@ const Candle = ({
       <Graphics
         draw={(g) => {
           g.clear();
-          g.beginFill(color);
-          g.drawRect(x - 1, bar_bottom, 1, wick_bottom - bar_bottom);
+          g.lineStyle(1, color);
+          g.moveTo(x, bar_bottom);
+          g.lineTo(x, wick_bottom);
           g.endFill();
         }}
       />
