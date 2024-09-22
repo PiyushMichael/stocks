@@ -1,4 +1,6 @@
 import {
+  TRAINING_NORMALISATION_MARGIN_PERCENT,
+  TRAINING_NORMALISATION_MAX,
   TRAINING_PROJECTION_SAMPLE_SIZE,
   TRAINING_SLIDING_WINDOW_SIZE,
   TRAINING_TREND_SAMPLE_SIZE,
@@ -8,9 +10,67 @@ import { fetchAndUpdate, transformResponse } from "@/utils/helpers";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 /**
+ * function to scale a number down to max TRAINING_NORMALISATION_MAX
+ * and with TRAINING_NORMALISATION_MARGIN_PERCENT margin
+ */
+const normalise = (num: number, min: number, max: number) => {
+  const diff = max - min;
+  const high = max + (diff * TRAINING_NORMALISATION_MARGIN_PERCENT) / 100;
+  const low = min - (diff * TRAINING_NORMALISATION_MARGIN_PERCENT) / 100;
+  const bracket = high - low;
+  const coeff = bracket / TRAINING_NORMALISATION_MAX;
+
+  return Math.round((num - low) / coeff);
+};
+
+/**
+ * Function to normalize Array<[high, open, close, low, volume][25], [high, open, close, low, volume][5]>
+ * 25 is subsctituted with TRAINING_TREND_SAMPLE_SIZE and 5 with TRAINING_PROJECTION_SAMPLE_SIZE
+ */
+const normaliseFigures = (arr: number[][][][]) => {
+  // generate combined slot array of samples + projections
+  const slots = arr.map(([samples, projections]) => [
+    ...samples,
+    ...projections,
+  ]);
+
+  const allSlotSamplesValues = slots.map((slot) => {
+    // all stock history values of a slot
+    const allSlotValues = slot
+      .map(([high, open, close, low]) => [high, open, close, low])
+      .flat();
+    const valuesMin = Math.min(...allSlotValues);
+    const valuesMax = Math.max(...allSlotValues);
+
+    // all volume values of a slot
+    const allSlotVolumes = slot.map((slotArr) => slotArr[4]);
+    const volumesMin = Math.min(...allSlotVolumes);
+    const volumesMax = Math.max(...allSlotVolumes);
+
+    // generating normalised stock value and volume numbers
+    const normalisedSlots = slot.map(([high, open, close, low], i) => [
+      normalise(high, valuesMin, valuesMax),
+      normalise(open, valuesMin, valuesMax),
+      normalise(close, valuesMin, valuesMax),
+      normalise(low, valuesMin, valuesMax),
+      normalise(allSlotVolumes[i], volumesMin, volumesMax),
+    ]);
+
+    // bifurcating nomralised slots back into samples and projections
+    return [
+      normalisedSlots.slice(0, TRAINING_TREND_SAMPLE_SIZE),
+      normalisedSlots.slice(-TRAINING_PROJECTION_SAMPLE_SIZE),
+    ];
+  });
+
+  return allSlotSamplesValues;
+};
+
+/**
  *
  * @param res TransformedType
  * @returns Array<[high, open, close, low, volume][25], [high, open, close, low, volume][5]>
+ * 25 is subsctituted with TRAINING_TREND_SAMPLE_SIZE and 5 with TRAINING_PROJECTION_SAMPLE_SIZE
  */
 const generateTrainingData = (res: TransformedType) => {
   // turning stock history into Array of [high, open, close, low, volume]
@@ -42,7 +102,8 @@ const generateTrainingData = (res: TransformedType) => {
     );
     figures.push([trends, projections]);
   }
-  return figures;
+
+  return normaliseFigures(figures);
 };
 
 export default async function handler(
