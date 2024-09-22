@@ -6,7 +6,7 @@ import {
   TRAINING_TREND_SAMPLE_SIZE,
 } from "@/constants/app_contants";
 import { TransformedType } from "@/types";
-import { fetchAndUpdate, transformResponse } from "@/utils/helpers";
+import { convertToHex, fetchAndUpdate, transformResponse } from "@/utils/helpers";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 /**
@@ -49,11 +49,11 @@ const normaliseFigures = (arr: number[][][][]) => {
 
     // generating normalised stock value and volume numbers
     const normalisedSlots = slot.map(([high, open, close, low], i) => [
-      normalise(high, valuesMin, valuesMax),
-      normalise(open, valuesMin, valuesMax),
-      normalise(close, valuesMin, valuesMax),
-      normalise(low, valuesMin, valuesMax),
-      normalise(allSlotVolumes[i], volumesMin, volumesMax),
+      convertToHex(normalise(high, valuesMin, valuesMax)),
+      convertToHex(normalise(open, valuesMin, valuesMax)),
+      convertToHex(normalise(close, valuesMin, valuesMax)),
+      convertToHex(normalise(low, valuesMin, valuesMax)),
+      convertToHex(normalise(allSlotVolumes[i], volumesMin, volumesMax)),
     ]);
 
     // bifurcating nomralised slots back into samples and projections

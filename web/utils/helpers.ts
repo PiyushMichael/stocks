@@ -1,4 +1,4 @@
-import { api_key } from "@/constants/app_contants";
+import { api_key, TRAINING_NORMALISATION_MAX } from "@/constants/app_contants";
 import { ResponseData, TransformedType } from "@/types";
 import fs from "fs";
 
@@ -67,3 +67,26 @@ export const fetchAndUpdate = (stock_code: string) =>
         readFile(stock_code).then(res).catch(rej);
       });
   });
+
+/**
+ * Function to generate hex string with leading zeroes
+ * the number of leading zeroes is calculated from TRAINING_NORMALISATION_MAX
+ */
+export const convertToHex = (num: number) => {
+  const places = Math.ceil(Math.log2(TRAINING_NORMALISATION_MAX) / 4);
+  return `${Array(places).fill("0").join("")}${Math.round(num).toString(
+    16
+  )}`.slice(-places);
+};
+
+/**
+ * hex string to int
+ */
+export const parseHex = (str: string) => {
+  try {
+    return parseInt(str, 16);
+  } catch {
+    console.log("--- parse hex fail ---");
+    return -1;
+  }
+};
